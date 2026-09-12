@@ -6,7 +6,7 @@ import { PORT } from './config/env';
 import { getHistory, addHistory } from './services/history';
 import { setupWebsocketServer, kirimKeFrontend, broadcast } from './websocket/websocket';
 import { generateVoice } from './services/voicevox';
-import { initMemory, searchMemory, updateMemory } from './services/memory';
+import { initMemory, searchMemory, updateMemory, topikContextBlock } from './services/memory';
 import { buildPrompt } from './prompts/buildPrompt';
 import { chatWithTools } from './services/chat';
 import { translateToJapanese } from './services/translator';
@@ -80,7 +80,7 @@ app.post('/api/tanya', async (req, res) => {
 
     try {
         const waktuSekarang = getCurrentTime();
-        const konteksRelevan = await searchMemory(pesan);
+        const konteksRelevan = (await searchMemory(pesan)) + topikContextBlock();
         const sifatLina = buildPrompt(waktuSekarang, konteksRelevan, VOICE_EXCLUDED_TOOLS);
 
         const messagesForGroq: ChatMessage[] = [

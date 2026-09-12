@@ -21,6 +21,45 @@ export function entryText(entry: MemoryEntry): string {
     return typeof entry === "string" ? entry : entry.text;
 }
 
+function entryTopic(entry: MemoryEntry): string | null {
+    return typeof entry === "string" ? null : (entry.topic?.trim() || null);
+}
+
+/**
+ * Daftar topik yang udah pernah dipakai (unik, urutan pertama kali muncul).
+ * Disuntik ke system prompt tiap chat, biar LLM bisa cek dan PAKAI ULANG topik
+ * yang cocok — bukan ngarang topik baru tiap kali nyimpen ingatan yang temanya
+ * sebenernya sama kayak yang udah ada.
+ */
+export function listTopics(): string[] {
+    try {
+        const data: MemoryEntry[] = JSON.parse(fs.readFileSync(memoryFilePath, "utf-8"));
+        const topik: string[] = [];
+        for (const entry of data) {
+            const t = entryTopic(entry);
+            if (t && !topik.some(x => x.toLowerCase() === t.toLowerCase())) {
+                topik.push(t);
+            }
+        }
+        return topik;
+    } catch {
+        return [];
+    }
+}
+
+/** Blok siap-suntik ke system prompt (kosong kalau belum ada topik sama sekali). */
+export function topikContextBlock(): string {
+    const topik = listTopics();
+    if (topik.length === 0) return "";
+
+    return (
+        "\n\nTOPIK INGATAN YANG SUDAH ADA (kalau ingatan baru yang mau kamu simpan " +
+        "temanya sama/mirip salah satu ini, PAKAI PERSIS judul di bawah ini buat field " +
+        "\"topik\" — JANGAN bikin judul baru kalau udah ada yang cocok):\n" +
+        topik.map(t => `- ${t}`).join("\n")
+    );
+}
+
 const memoryFilePath =
 path.join(process.cwd(),
 "src",

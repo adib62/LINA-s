@@ -14,7 +14,7 @@ import {
 } from "../services/threads";
 import { chatWithTools } from "../services/chat";
 import { buildPrompt } from "../prompts/buildPrompt";
-import { searchMemory, updateMemory } from "../services/memory";
+import { searchMemory, updateMemory, topikContextBlock } from "../services/memory";
 import { getCurrentTime } from "../utils/time";
 import { parseGroqResponse } from "../utils/json";
 import { translateToJapanese } from "../services/translator";
@@ -136,7 +136,7 @@ router.post("/chat", async (req, res) => {
             content: m.content
         }));
 
-        const konteks = await searchMemory(pesan);
+        const konteks = (await searchMemory(pesan)) + topikContextBlock();
         const sistem = buildPrompt(getCurrentTime(), konteks);
 
         const messages: ChatMessage[] = [

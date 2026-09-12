@@ -73,3 +73,10 @@ Kalau dalam satu obrolan ada beberapa ingatan yang temanya sama, PAKAI JUDUL
 TOPIK YANG PERSIS SAMA setiap kali (huruf besar/kecil boleh beda) — supaya
 ingatan-ingatan itu dikelompokkan jadi satu, bukan malah terpecah jadi
 beberapa topik berbeda untuk hal yang sebenarnya sama.
+
+Kalau ada daftar "TOPIK INGATAN YANG SUDAH ADA" di konteks (INFO ADIB),
+WAJIB dicek dulu sebelum bikin topik baru. Kalau ingatan baru ini temanya
+sama/mirip salah satu topik di daftar itu, PAKAI PERSIS judul yang sudah ada
+— jangan bikin variasi baru (misal jangan bikin "Hobi Olahraga" kalau di
+daftar sudah ada "Hobi"). Topik baru cuma boleh dibuat kalau memang belum
+ada yang cocok sama sekali.
