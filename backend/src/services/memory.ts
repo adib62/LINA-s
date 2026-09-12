@@ -1,9 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
-import { pipeline, cos_sim } from "@xenova/transformers";
+import { embed, cos_sim } from "./embeddings";
 import { syncMemoryToObsidian } from "./obsidianSync";
-
-let extractor: any = null;
 
 let memoryVectors: {
     text: string;
@@ -69,7 +67,6 @@ path.join(process.cwd(),
 
 export async function initMemory() {
     console.log("⏳ Memuat model Semantic Embedding L.I.N.A (Xenova/all-MiniLM-L6-v2)...");
-    extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { quantized: true });
 
     // Pastiin folder src/data/ ada dulu — sebelumnya langsung writeFileSync
     // tanpa cek folder, jadi error ENOENT kalau backend baru pertama kali dijalankan
@@ -97,8 +94,8 @@ export async function initMemory() {
 
     for (const entry of catatanMemori) {
         const teks = entryText(entry);
-        const output = await extractor(teks, { pooling: 'mean', normalize: true });
-        memoryVectors.push({ text: teks, embedding: output.data });
+        const embedding = await embed(teks);
+        memoryVectors.push({ text: teks, embedding });
     }
     console.log(`✅ Memori lokal L.I.N.A berhasil di-index! (${catatanMemori.length} ingatan dimuat)`);
 
@@ -109,17 +106,14 @@ export async function searchMemory(pesan: string):Promise<string> {
 
     let konteksRelevan = "";
 
-    if (!extractor || memoryVectors.length === 0) {
+    if (memoryVectors.length === 0) {
         return "";
     }
 
-    const queryEmbedding = await extractor(pesan, {
-        pooling: "mean",
-        normalize: true
-    });
+    const queryEmbedding = await embed(pesan);
 
     const hasilPencarian = memoryVectors.map(mem => {
-        const score = cos_sim(queryEmbedding.data, mem.embedding);
+        const score = cos_sim(queryEmbedding, mem.embedding);
 
         return {
             text: mem.text,
@@ -179,9 +173,9 @@ export async function updateMemory(
                 currentData.push(entryBaru);
                 fs.writeFileSync(memoryFilePath, JSON.stringify(currentData, null, 4));
 
-                const embedding = await extractor(newMemory, { pooling: "mean", normalize: true });
+                const embedding = await embed(newMemory);
 
-                memoryVectors.push({ text: newMemory, embedding: embedding.data });
+                memoryVectors.push({ text: newMemory, embedding });
 
                 console.log(
                     `💾 Ingatan baru berhasil disimpan ke memory.json: "${newMemory}"` +
@@ -216,8 +210,8 @@ export async function updateMemory(
                 const semuaMemory: MemoryEntry[] = JSON.parse(fs.readFileSync(memoryFilePath, 'utf-8'));
                 for (const m of semuaMemory) {
                     const teks = entryText(m);
-                    const emb = await extractor(teks, { pooling: 'mean', normalize: true });
-                    memoryVectors.push({ text: teks, embedding: emb.data });
+                    const emb = await embed(teks);
+                    memoryVectors.push({ text: teks, embedding: emb });
                 }
 
                 console.log("💾 Memory Update");

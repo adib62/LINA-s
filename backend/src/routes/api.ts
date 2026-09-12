@@ -15,6 +15,7 @@ import {
 import { chatWithTools } from "../services/chat";
 import { buildPrompt } from "../prompts/buildPrompt";
 import { searchMemory, updateMemory, topikContextBlock } from "../services/memory";
+import { searchVault } from "../services/vaultIndex";
 import { getCurrentTime } from "../utils/time";
 import { parseGroqResponse } from "../utils/json";
 import { translateToJapanese } from "../services/translator";
@@ -136,7 +137,13 @@ router.post("/chat", async (req, res) => {
             content: m.content
         }));
 
-        const konteks = (await searchMemory(pesan)) + topikContextBlock();
+        const catatanVault = await searchVault(pesan);
+        const konteks =
+            (await searchMemory(pesan)) +
+            topikContextBlock() +
+            (catatanVault ? `\n\nCATATAN VAULT OBSIDIAN YANG RELEVAN (tulisan pengguna sendiri, bukan fakta ` +
+                `yang udah dikonfirmasi lewat obrolan — pakai sebagai referensi, jangan diperlakukan ` +
+                `sama pastinya kayak ingatan):\n${catatanVault}` : "");
         const sistem = buildPrompt(getCurrentTime(), konteks);
 
         const messages: ChatMessage[] = [

@@ -75,6 +75,11 @@ Kalau vault Obsidian sudah dipasang (`PROMPTS_DIR`), tiap ingatan baru/berubah
 otomatis ditulis juga ke vault sebagai note yang saling terhubung (`LINA Memory/`
 + `LINA Memory Index.md`) — real-time, tanpa perlu diminta.
 
+**Arah sebaliknya juga jalan** — LINA memantau (real-time, bukan cuma pas startup)
+seluruh catatan lain di vault Obsidian (di luar file config/ingatannya sendiri) dan
+bisa manfaatin isinya sebagai konteks tambahan pas chat, tanpa perlu di-copy manual
+ke memori dulu.
+
 ---
 
 ## 💭 Conversation Memory

@@ -7,6 +7,7 @@ import { getHistory, addHistory } from './services/history';
 import { setupWebsocketServer, kirimKeFrontend, broadcast } from './websocket/websocket';
 import { generateVoice } from './services/voicevox';
 import { initMemory, searchMemory, updateMemory, topikContextBlock } from './services/memory';
+import { initVaultIndex, searchVault } from './services/vaultIndex';
 import { buildPrompt } from './prompts/buildPrompt';
 import { chatWithTools } from './services/chat';
 import { translateToJapanese } from './services/translator';
@@ -47,6 +48,7 @@ const server = app.listen(PORT, async () => {
     console.log(`📓 Prompts dibaca dari: ${promptsSourceInfo()}`);
     console.log("==================================================");
     await initMemory();
+    initVaultIndex();
     startScheduler();
 });
 
@@ -80,7 +82,13 @@ app.post('/api/tanya', async (req, res) => {
 
     try {
         const waktuSekarang = getCurrentTime();
-        const konteksRelevan = (await searchMemory(pesan)) + topikContextBlock();
+        const catatanVault = await searchVault(pesan);
+        const konteksRelevan =
+            (await searchMemory(pesan)) +
+            topikContextBlock() +
+            (catatanVault ? `\n\nCATATAN VAULT OBSIDIAN YANG RELEVAN (tulisan pengguna sendiri, bukan fakta ` +
+                `yang udah dikonfirmasi lewat obrolan — pakai sebagai referensi, jangan diperlakukan ` +
+                `sama pastinya kayak ingatan):\n${catatanVault}` : "");
         const sifatLina = buildPrompt(waktuSekarang, konteksRelevan, VOICE_EXCLUDED_TOOLS);
 
         const messagesForGroq: ChatMessage[] = [
