@@ -422,7 +422,14 @@ router.get("/agent/sessions/:id", (req, res) => {
 
 router.post("/agent/run", async (req, res) => {
     const task = String(req.body?.task ?? "").trim();
-    const file = req.body?.file as { name?: string; path?: string } | undefined;
+
+    // "files" (array) — cara baru, bisa lampirin beberapa file sekaligus (misal beberapa
+    // foto langkah-langkah). "file" (satu objek) masih diterima buat kompatibilitas lama.
+    const rawFiles: Array<{ name?: string; path?: string }> = Array.isArray(req.body?.files)
+        ? req.body.files
+        : req.body?.file
+            ? [req.body.file]
+            : [];
 
     if (!task) {
         return res.status(400).json({ success: false, error: "Task kosong." });
@@ -432,13 +439,19 @@ router.post("/agent/run", async (req, res) => {
     agentAbort = new AbortController();
 
     try {
-        let fileContext: FileContext | undefined;
+        const fileContexts: FileContext[] = [];
 
-        if (file?.path && file?.name) {
-            fileContext = { name: file.name, teks: await extractFileText(file.path) };
+        for (const file of rawFiles) {
+            if (file?.path && file?.name) {
+                fileContexts.push({ name: file.name, teks: await extractFileText(file.path) });
+            }
         }
 
-        const session = await runAgentTask(task, agentAbort.signal, fileContext);
+        const session = await runAgentTask(
+            task,
+            agentAbort.signal,
+            fileContexts.length > 0 ? fileContexts : undefined
+        );
         return res.json({ success: true, session });
     } catch (error) {
         logError("Agent run gagal!", error);

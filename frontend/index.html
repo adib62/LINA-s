@@ -198,6 +198,7 @@ html, body {
 .model-bar { border-top: 1px solid #0d0d0d; padding: .4rem 1rem; display: flex; align-items: center; gap: .5rem; background: #060608; flex-shrink: 0; }
 .attach-chip { font-size: 8px; color: #4d7c0f; border: 1px solid #1f2f0a; background: #0b0f05; border-radius: 4px; padding: 2px 7px; letter-spacing: .06em; display: none; align-items: center; gap: 5px; }
 .attach-chip.show { display: flex; }
+.agent-attach-list { display: flex; flex-wrap: wrap; gap: .35rem; }
 .attach-x { cursor: pointer; color: #365314; }
 .attach-x:hover { color: #a3e635; }
 .model-btn { margin-left: auto; font-size: 11px; color: #4a2a6a; background: #0a0515; border: 1px solid #1e0f30; border-radius: 5px; padding: 3px 10px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all .2s; position: relative; }
@@ -547,13 +548,11 @@ html, body {
     </div>
   </div>
 
-  <div class="attach-chip" id="agentAttachChip" style="margin:0 1.1rem .5rem">
-    <span id="agentAttachName"></span>
-    <span class="attach-x" onclick="clearAttachment()">✕</span>
-  </div>
+  <div class="agent-attach-list" id="agentAttachList" style="margin:0 1.1rem .5rem"></div>
+  <input type="file" id="agentFileInput" multiple style="display:none" />
 
   <div class="inp">
-    <div class="inp-plus" onclick="pickFile('file')" title="Lampirkan file (PDF/teks/foto) biar agent tau konteks tugasnya">
+    <div class="inp-plus" onclick="pickAgentFiles()" title="Lampirkan file (PDF/teks/foto, bisa lebih dari satu) biar agent tau konteks tugasnya">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
     </div>
     <div class="inp-prompt">&gt;_</div>
@@ -1284,7 +1283,58 @@ let attachment = null;
 function clearAttachment() {
   attachment = null;
   document.getElementById('attachChip').classList.remove('show');
-  document.getElementById('agentAttachChip').classList.remove('show');
+}
+
+let agentAttachments = [];
+
+function pickAgentFiles() {
+  document.getElementById('agentFileInput').click();
+  closeAllPopups();
+}
+
+function renderAgentAttachments() {
+  const list = document.getElementById('agentAttachList');
+  list.innerHTML = '';
+  agentAttachments.forEach((f, i) => {
+    const chip = document.createElement('span');
+    chip.className = 'attach-chip show';
+    chip.innerHTML = `<span>📎 ${esc(f.name)}</span><span class="attach-x">✕</span>`;
+    chip.querySelector('.attach-x').onclick = () => removeAgentAttachment(i);
+    list.appendChild(chip);
+  });
+}
+
+function removeAgentAttachment(idx) {
+  agentAttachments.splice(idx, 1);
+  renderAgentAttachments();
+}
+
+function clearAgentAttachments() {
+  agentAttachments = [];
+  renderAgentAttachments();
+}
+
+function handleAgentFiles(fileList) {
+  const files = Array.from(fileList || []);
+  if (files.length === 0) return;
+
+  files.forEach(file => {
+    toast(`Mengunggah ${file.name}...`);
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const data = await api('/api/upload', {
+          method: 'POST',
+          body: JSON.stringify({ name: file.name, data: reader.result })
+        });
+        agentAttachments.push(data.file);
+        renderAgentAttachments();
+      } catch (e) { toast(`Upload ${file.name} gagal: ` + e.message, true); }
+    };
+    reader.onerror = () => toast(`Gagal membaca ${file.name}.`, true);
+    reader.readAsDataURL(file);
+  });
 }
 
 async function sendMessage() {
@@ -1421,8 +1471,6 @@ function handleFile(file) {
       attachment = data.file;
       document.getElementById('attachName').textContent = `📎 ${data.file.name}`;
       document.getElementById('attachChip').classList.add('show');
-      document.getElementById('agentAttachName').textContent = `📎 ${data.file.name}`;
-      document.getElementById('agentAttachChip').classList.add('show');
       toast('File siap dikirim bersama pesan.');
     } catch (e) { toast('Upload gagal: ' + e.message, true); }
   };
@@ -1432,6 +1480,7 @@ function handleFile(file) {
 
 document.getElementById('fileInput').onchange = e => { handleFile(e.target.files[0]); e.target.value = ''; };
 document.getElementById('imageInput').onchange = e => { handleFile(e.target.files[0]); e.target.value = ''; };
+document.getElementById('agentFileInput').onchange = e => { handleAgentFiles(e.target.files); e.target.value = ''; };
 
 async function takeScreenshot() {
   closeAllPopups();
@@ -1840,8 +1889,8 @@ async function runAgent() {
 
   document.getElementById('agentResult').classList.remove('show');
   document.getElementById('agentTask').textContent = `TUGAS: ${task}`;
-  document.getElementById('agentHint').textContent = attachment
-    ? `Menyusun rencana (baca lampiran: ${attachment.name})...`
+  document.getElementById('agentHint').textContent = agentAttachments.length > 0
+    ? `Menyusun rencana (baca ${agentAttachments.length} lampiran)...`
     : 'Menyusun rencana...';
   document.getElementById('stopAgentBtn').style.display = '';
 
@@ -1857,9 +1906,9 @@ async function runAgent() {
   document.getElementById('agentReviseRow').style.display = 'none';
 
   const body = { task };
-  if (attachment) {
-    body.file = { name: attachment.name, path: attachment.path };
-    clearAttachment();
+  if (agentAttachments.length > 0) {
+    body.files = agentAttachments.map(f => ({ name: f.name, path: f.path }));
+    clearAgentAttachments();
   }
 
   try {

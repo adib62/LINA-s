@@ -77,18 +77,25 @@ function log(session: AgentSession, agent: SubAgent, line: string): void {
  * Minta LLM memecah task jadi beberapa sub-agent.
  * Kalau gagal parse, jatuh ke pembagian default 3 agent.
  */
-function withFileContext(text: string, fileContext?: FileContext): string {
-    if (!fileContext) return text;
+function withFileContext(text: string, fileContexts?: FileContext[]): string {
+    if (!fileContexts || fileContexts.length === 0) return text;
 
-    return fileContext.teks
-        ? `${text}\n\n[LAMPIRAN: ${fileContext.name}]\n${fileContext.teks}`
-        : `${text}\n\n[LAMPIRAN: ${fileContext.name}] (tipe file ini belum bisa dibaca otomatis)`;
+    const blocks = fileContexts
+        .map((fc, i) => {
+            const label = fileContexts.length > 1 ? `LAMPIRAN ${i + 1}` : "LAMPIRAN";
+            return fc.teks
+                ? `[${label}: ${fc.name}]\n${fc.teks}`
+                : `[${label}: ${fc.name}] (tipe file ini belum bisa dibaca otomatis)`;
+        })
+        .join("\n\n");
+
+    return `${text}\n\n${blocks}`;
 }
 
 async function planAgents(
     task: string,
     signal: AbortSignal,
-    fileContext?: FileContext
+    fileContexts?: FileContext[]
 ): Promise<Array<{ label: string; role: string; task: string }>> {
 
     const settings = getSettings();
@@ -99,8 +106,9 @@ async function planAgents(
             content:
                 "Kamu adalah perencana tugas. Pecah tugas pengguna menjadi 2 sampai 5 sub-tugas " +
                 "yang bisa dikerjakan PARALEL dan tidak saling bergantung.\n\n" +
-                "Kalau ada [LAMPIRAN] di pesan pengguna, pastikan sub-tugas yang kamu susun " +
-                "benar-benar memanfaatkan isi lampiran itu, bukan cuma tugas umum.\n\n" +
+                "Kalau ada satu atau lebih [LAMPIRAN] di pesan pengguna (bisa berupa deskripsi " +
+                "beberapa foto berurutan), pastikan sub-tugas yang kamu susun benar-benar " +
+                "memanfaatkan isi semua lampiran itu, bukan cuma tugas umum.\n\n" +
                 "Balas HANYA JSON dengan bentuk:\n" +
                 '{"agents":[{"label":"RESEARCH","role":"peneliti yang mengumpulkan fakta",' +
                 '"task":"kumpulkan fakta tentang X"}]}\n\n' +
@@ -110,7 +118,7 @@ async function planAgents(
                 "- task: instruksi konkret untuk agen tersebut.\n" +
                 "- Jangan bikin sub-tugas yang harus menunggu hasil sub-tugas lain."
         },
-        { role: "user", content: withFileContext(task, fileContext) }
+        { role: "user", content: withFileContext(task, fileContexts) }
     ];
 
     const raw = await askGroq(messages, signal, {
@@ -148,7 +156,7 @@ async function runSubAgent(
     session: AgentSession,
     agent: SubAgent,
     signal: AbortSignal,
-    fileContext?: FileContext
+    fileContexts?: FileContext[]
 ): Promise<void> {
 
     const settings = getSettings();
@@ -177,7 +185,7 @@ async function runSubAgent(
                         "Kerjakan HANYA bagianmu. Jawab ringkas, padat, dalam Bahasa Indonesia. " +
                         "Jangan menyapa, jangan basa-basi, langsung isi."
                 },
-                { role: "user", content: withFileContext(agent.task, fileContext) }
+                { role: "user", content: withFileContext(agent.task, fileContexts) }
             ],
             signal,
             { model: agent.model, effort: settings.effort, jsonMode: false }
@@ -207,7 +215,7 @@ async function runSubAgent(
 export async function runAgentTask(
     task: string,
     signal: AbortSignal,
-    fileContext?: FileContext
+    fileContexts?: FileContext[]
 ): Promise<AgentSession> {
 
     const settings = getSettings();
@@ -224,7 +232,7 @@ export async function runAgentTask(
     emit(session);
 
     // 1. Rencanakan
-    const plan = await planAgents(task, signal, fileContext);
+    const plan = await planAgents(task, signal, fileContexts);
 
     session.agents = plan.map((p, i) => ({
         id: `A${i + 1}`,
@@ -241,7 +249,7 @@ export async function runAgentTask(
 
     // 2. Jalankan semua sub-agent berbarengan
     await Promise.all(
-        session.agents.map(agent => runSubAgent(session, agent, signal, fileContext))
+        session.agents.map(agent => runSubAgent(session, agent, signal, fileContexts))
     );
 
     // 3. Gabungkan hasil
