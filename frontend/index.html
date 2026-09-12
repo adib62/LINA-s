@@ -1286,6 +1286,7 @@ function clearAttachment() {
 }
 
 let agentAttachments = [];
+const MAX_AGENT_ATTACHMENTS = 10;
 
 function pickAgentFiles() {
   document.getElementById('agentFileInput').click();
@@ -1318,7 +1319,18 @@ function handleAgentFiles(fileList) {
   const files = Array.from(fileList || []);
   if (files.length === 0) return;
 
-  files.forEach(file => {
+  const remaining = MAX_AGENT_ATTACHMENTS - agentAttachments.length;
+  if (remaining <= 0) {
+    toast(`Maksimal ${MAX_AGENT_ATTACHMENTS} lampiran per tugas.`, true);
+    return;
+  }
+
+  const toUpload = files.slice(0, remaining);
+  if (files.length > toUpload.length) {
+    toast(`Cuma ${toUpload.length} file diambil — maksimal ${MAX_AGENT_ATTACHMENTS} lampiran per tugas.`, true);
+  }
+
+  toUpload.forEach(file => {
     toast(`Mengunggah ${file.name}...`);
 
     const reader = new FileReader();

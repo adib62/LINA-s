@@ -420,6 +420,9 @@ router.get("/agent/sessions/:id", (req, res) => {
     res.json({ success: true, session });
 });
 
+/** Batas lampiran per tugas — jaga-jaga biar prompt gabungannya gak kena 413/rate-limit Groq. */
+const MAX_AGENT_FILES = 10;
+
 router.post("/agent/run", async (req, res) => {
     const task = String(req.body?.task ?? "").trim();
 
@@ -433,6 +436,13 @@ router.post("/agent/run", async (req, res) => {
 
     if (!task) {
         return res.status(400).json({ success: false, error: "Task kosong." });
+    }
+
+    if (rawFiles.length > MAX_AGENT_FILES) {
+        return res.status(400).json({
+            success: false,
+            error: `Maksimal ${MAX_AGENT_FILES} lampiran per tugas.`
+        });
     }
 
     if (agentAbort) agentAbort.abort();
