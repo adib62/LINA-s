@@ -5,6 +5,18 @@ udah final di zip ini — tinggal `npm install` dan jalanin.
 
 ## Cara jalanin
 
+**Opsi cepat** — backend + vision-service sekaligus, satu perintah (jalan di Windows via Git Bash
+maupun Linux):
+
+```bash
+cd backend && npm install
+cd vision-service && pip install -r requirements.txt && cd ../..
+./start.sh              # backend + vision-service
+./start.sh --no-vision  # backend doang, skip vision-service
+```
+
+**Manual**, kalau mau kontrol tiap servis di terminal terpisah:
+
 ```bash
 cd backend
 npm install
@@ -16,8 +28,12 @@ Buka **http://localhost:5000** — backend sekalian nyajiin frontend, jadi gak p
 Servis tambahan (opsional, tergantung fitur yang mau dipakai):
 
 ```bash
-# Vision (tombol screenshot di chat mode)
+# Vision (tombol screenshot di chat mode, deskripsi foto di Agent Mode)
 cd backend/vision-service && python run.py
+
+# VLM buat deskripsi foto (Agent Mode) — Ollama harus jalan + model ke-pull
+ollama serve
+ollama pull riven/smolvlm
 
 # LibreOffice headless (office.convertFile)
 which soffice || sudo apt install libreoffice

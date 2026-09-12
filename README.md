@@ -307,6 +307,20 @@ diregistrasi ke `registry` — masih placeholder untuk pengembangan berikutnya.
 
 ---
 
+# ▶️ Cara Menjalankan
+
+```bash
+cd backend && npm install
+cd vision-service && pip install -r requirements.txt && cd ../..
+./start.sh              # backend + vision-service sekaligus
+./start.sh --no-vision  # backend doang
+```
+
+Buka **http://localhost:5000**. Detail lengkap (setup Ollama buat deskripsi foto, LibreOffice,
+Playwright, dll) ada di `CHANGES.md`.
+
+---
+
 # 🚀 Roadmap
 
 ## 🧠 Memory
