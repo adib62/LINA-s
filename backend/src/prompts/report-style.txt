@@ -1,0 +1,29 @@
+GAYA PENULISAN & FORMAT LAPORAN (khusus Agent Mode):
+
+Belum ada gaya penulisan khusus yang diatur pengguna. Tulis dengan gaya baku,
+rapi, dan format yang wajar untuk jenis tugasnya (laporan, makalah, ringkasan, dst).
+
+---
+
+Untuk mengatur gaya penulisan sendiri (nada bahasa formal/santai, struktur
+laporan, urutan bagian/BAB, cara sitasi, dsb), edit file ini langsung:
+
+backend/src/prompts/report-style.txt
+
+Atau, kalau PROMPTS_DIR ke vault Obsidian sudah di-set (lihat
+obsidian-prompts/README.md), edit report-style.md di vault — perubahan
+langsung kepakai tanpa restart backend.
+
+Contoh isi yang bisa diganti:
+
+Format laporan praktikum kampus saya:
+1. Judul
+2. Tujuan Praktikum
+3. Alat dan Bahan
+4. Langkah Kerja (bernomor, kalimat perintah/pasif)
+5. Hasil Pengamatan
+6. Pembahasan
+7. Kesimpulan
+
+Gaya bahasa: formal, baku, hindari kata ganti "aku/gue", gunakan "penulis"
+atau kalimat pasif. Setiap bagian diberi heading dengan huruf kapital.

@@ -184,8 +184,10 @@ Mode terpisah dari chat biasa untuk tugas yang lebih kompleks:
 - Sub-agent jalan paralel, masing-masing punya "terminal" sendiri
 - Progress dikirim live lewat WebSocket
 - Hasil akhir digabung otomatis
-- Bisa dikasih lampiran foto — dideskripsikan dulu lewat vision-service (OCR + VLM)
-  sebelum jadi konteks buat sub-agent
+- Bisa dikasih lampiran foto (sampai 10 file sekaligus) — dideskripsikan dulu lewat
+  vision-service (OCR + VLM) sebelum jadi konteks buat sub-agent
+- Gaya penulisan & format laporan bisa diatur sendiri lewat `backend/src/prompts/report-style.txt`
+  (atau `report-style.md` di vault Obsidian) — dipakai planner, sub-agent, dan penggabung hasil
 - Hasil gabungan berhenti dulu di status **preview** — bisa diedit manual sebelum final
 - Setelah difinalisasi, hasil otomatis dikirim ke Telegram (kalau sudah dikonfigurasi)
 

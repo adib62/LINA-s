@@ -37,7 +37,7 @@ File dibaca ulang dari disk **setiap ada pesan masuk** (gak di-cache), jadi
 edit `personality.md` di Obsidian terus save — pesan LINA berikutnya langsung
 kepake tanpa perlu restart backend.
 
-## Lima file yang wajib ada
+## File-file yang bisa diedit
 
 | File | Isinya apa |
 |---|---|
@@ -46,6 +46,7 @@ kepake tanpa perlu restart backend.
 | `personality.md` | Gaya bicara, kepribadian |
 | `memory.md` | Aturan apa yang layak disimpan sebagai memori jangka panjang |
 | `japanes.md` | Aturan terjemahan ke Bahasa Jepang buat suara |
+| `report-style.md` | Gaya penulisan & format laporan khusus **Agent Mode** (bukan chat biasa) — nada bahasa, struktur BAB/bagian, cara sitasi, dsb |
 
 Kalau salah satu file **belum ada** di vault (misal lu baru mau coba edit
 `personality.md` doang dulu), LINA otomatis jatuh balik ke versi bawaan

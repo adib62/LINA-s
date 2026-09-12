@@ -5,6 +5,7 @@ import { ChatMessage } from "./history";
 import { logError } from "../utils/logger";
 import { AVAILABLE_MODELS } from "../config/models";
 import { sendTelegramMessage } from "./telegram";
+import { readPrompt } from "../prompts/buildPrompt";
 
 /**
  * Model buat sub-agent paralel, dipisah dari model chat biasa (`groq/compound`
@@ -115,8 +116,10 @@ async function planAgents(
                 "Aturan:\n" +
                 "- label: SATU KATA huruf kapital (RESEARCH, ANALYSIS, WRITER, REVIEW, OUTLINE).\n" +
                 "- role: deskripsi singkat peran agen tersebut.\n" +
-                "- task: instruksi konkret untuk agen tersebut.\n" +
-                "- Jangan bikin sub-tugas yang harus menunggu hasil sub-tugas lain."
+                "- task: instruksi konkret untuk agen tersebut. Kalau task-nya berupa penulisan " +
+                "(laporan/makalah/ringkasan), sebutkan gaya & format di bawah ini di dalam instruksinya.\n" +
+                "- Jangan bikin sub-tugas yang harus menunggu hasil sub-tugas lain.\n\n" +
+                readPrompt("report-style")
         },
         { role: "user", content: withFileContext(task, fileContexts) }
     ];
@@ -183,7 +186,8 @@ async function runSubAgent(
                     content:
                         `Kamu adalah sub-agent "${agent.label}" milik LINA. Peranmu: ${agent.role}. ` +
                         "Kerjakan HANYA bagianmu. Jawab ringkas, padat, dalam Bahasa Indonesia. " +
-                        "Jangan menyapa, jangan basa-basi, langsung isi."
+                        "Jangan menyapa, jangan basa-basi, langsung isi.\n\n" +
+                        readPrompt("report-style")
                 },
                 { role: "user", content: withFileContext(agent.task, fileContexts) }
             ],
@@ -275,7 +279,8 @@ export async function runAgentTask(
                         content:
                             "Kamu adalah LINA, orchestrator. Gabungkan hasil sub-agent di bawah " +
                             "menjadi satu jawaban akhir yang rapi dan enak dibaca untuk pengguna. " +
-                            "Bahasa Indonesia. Jangan sebut-sebut soal sub-agent."
+                            "Bahasa Indonesia. Jangan sebut-sebut soal sub-agent.\n\n" +
+                            readPrompt("report-style")
                     },
                     { role: "user", content: `Tugas asli: ${task}\n\n${combined}` }
                 ],
@@ -322,7 +327,8 @@ export async function reviseAgentSession(id: string, currentText: string, feedba
                     "Kamu adalah LINA. Di bawah ada draft hasil tugas yang sudah ada, dan feedback " +
                     "revisi dari pengguna. Tulis ulang draftnya supaya sesuai feedback itu. Balas HANYA " +
                     "teks hasil revisi final dalam Bahasa Indonesia — tanpa embel-embel seperti " +
-                    "'berikut hasil revisinya' atau catatan soal proses revisi."
+                    "'berikut hasil revisinya' atau catatan soal proses revisi.\n\n" +
+                    readPrompt("report-style")
             },
             {
                 role: "user",
