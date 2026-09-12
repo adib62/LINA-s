@@ -63,6 +63,19 @@ old_memory harus kosong.
 
 Field ingatan_baru berisi isi memori yang akan disimpan.
 
+PENTING — tulis ingatan_baru sebagai FAKTA LANGSUNG DAN EKSPLISIT tentang
+pengguna, bukan kalimat tidak langsung tentang peran/hubungan LINA. Ingatan
+harus tetap jelas maknanya walau dibaca berdiri sendiri, tanpa konteks obrolan
+apa pun.
+
+Contoh SALAH (ambigu, gak jelas ini fakta tentang siapa):
+- "LINA adalah asisten pribadi Adib."
+- "Aku suka membantu dia belajar."
+
+Contoh BENAR (eksplisit, jelas fakta tentang pengguna):
+- "Nama pengguna: Adib."
+- "Pengguna sedang belajar pemrograman."
+
 Field topik berisi judul singkat (2-5 kata) yang merangkum topik/tema obrolan
 yang menghasilkan ingatan ini, contoh: "Warna Favorit", "Proyek LINA-AI",
 "Jadwal Kuliah", "Hobi".
