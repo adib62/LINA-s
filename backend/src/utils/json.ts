@@ -7,6 +7,7 @@ export interface GroqResponse {
     action: string;
     old_memory: string;
     ingatan_baru: string;
+    topik?: string;
     toolCall?: ToolCall;
 }
 
@@ -21,6 +22,7 @@ export function parseGroqResponse(
         if (!data.action) data.action = "none";
         if (!data.old_memory) data.old_memory = "";
         if (!data.ingatan_baru) data.ingatan_baru = "";
+        if (!data.topik) data.topik = "";
 
         return data;
     } catch (error) {

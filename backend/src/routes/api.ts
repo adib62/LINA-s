@@ -171,7 +171,8 @@ router.post("/chat", async (req, res) => {
             await updateMemory(
                 parsed.action || "none",
                 parsed.old_memory || "",
-                parsed.ingatan_baru || ""
+                parsed.ingatan_baru || "",
+                parsed.topik || ""
             );
         }
 

@@ -62,3 +62,14 @@ Jika action = "add" atau "none",
 old_memory harus kosong.
 
 Field ingatan_baru berisi isi memori yang akan disimpan.
+
+Field topik berisi judul singkat (2-5 kata) yang merangkum topik/tema obrolan
+yang menghasilkan ingatan ini, contoh: "Warna Favorit", "Proyek LINA-AI",
+"Jadwal Kuliah", "Hobi".
+
+Wajib diisi kalau action = "add" atau "replace". Kosongkan kalau action = "none".
+
+Kalau dalam satu obrolan ada beberapa ingatan yang temanya sama, PAKAI JUDUL
+TOPIK YANG PERSIS SAMA setiap kali (huruf besar/kecil boleh beda) — supaya
+ingatan-ingatan itu dikelompokkan jadi satu, bukan malah terpecah jadi
+beberapa topik berbeda untuk hal yang sebenarnya sama.

@@ -10,8 +10,19 @@ let memoryVectors: {
     embedding: any;
 }[] = [];
 
+/**
+ * Ingatan bisa berupa string polos (lama, sebelum ada sistem topik — tetap
+ * "lepas" di Obsidian, gak dipaksa masuk induk manapun) atau objek dengan
+ * topik (baru — dikelompokkan di bawah 1 note induk per topik di Obsidian).
+ */
+export type MemoryEntry = string | { text: string; topic: string };
+
+export function entryText(entry: MemoryEntry): string {
+    return typeof entry === "string" ? entry : entry.text;
+}
+
 const memoryFilePath =
-path.join(process.cwd(), 
+path.join(process.cwd(),
 "src",
 "data",
 "memory.json"
@@ -20,7 +31,7 @@ path.join(process.cwd(),
 export async function initMemory() {
     console.log("⏳ Memuat model Semantic Embedding L.I.N.A (Xenova/all-MiniLM-L6-v2)...");
     extractor = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2', { quantized: true });
-    
+
     // Pastiin folder src/data/ ada dulu — sebelumnya langsung writeFileSync
     // tanpa cek folder, jadi error ENOENT kalau backend baru pertama kali dijalankan
     const dataDir = path.dirname(memoryFilePath);
@@ -31,7 +42,7 @@ export async function initMemory() {
     // Cek apakah file memory.json sudah ada, kalau belum, buatkan file kosong
     if (!fs.existsSync(memoryFilePath)) {
         fs.writeFileSync(
-            memoryFilePath, 
+            memoryFilePath,
             JSON.stringify(
                 [],
                 null,
@@ -43,9 +54,10 @@ export async function initMemory() {
 
     // Baca data ingatan dari file external memory.json
     const rawData = fs.readFileSync(memoryFilePath, 'utf-8');
-    const catatanMemori = JSON.parse(rawData);
-    
-    for (const teks of catatanMemori) {
+    const catatanMemori: MemoryEntry[] = JSON.parse(rawData);
+
+    for (const entry of catatanMemori) {
+        const teks = entryText(entry);
         const output = await extractor(teks, { pooling: 'mean', normalize: true });
         memoryVectors.push({ text: teks, embedding: output.data });
     }
@@ -95,61 +107,76 @@ export async function searchMemory(pesan: string):Promise<string> {
 export async function updateMemory(
     action: string,
     oldMemory: string,
-    newMemory: string
+    newMemory: string,
+    topic: string = ""
 ){
     // LOGIKA PENYIMPANAN OTOMATIS
     try {
 
         switch (action) {
             case "add":{
-        
+
                 //validasi sebelum di cek duplicate
                 if (!newMemory || newMemory.trim() === "") {
                     console.log("⚠️ Ingatan baru kosong, tidak disimpan.");
                     break;
                 }
                 //push memory
-        
+
                 //jika sudah ada di memory lina tidak akan menyimpan ulang data yang sama
-                const currentData = JSON.parse(fs.readFileSync(memoryFilePath, 'utf-8'));
-        
-                const sudahAda = currentData.some((m: string) => m.toLowerCase() === newMemory.toLowerCase());
-        
+                const currentData: MemoryEntry[] = JSON.parse(fs.readFileSync(memoryFilePath, 'utf-8'));
+
+                const sudahAda = currentData.some(m => entryText(m).toLowerCase() === newMemory.toLowerCase());
+
                 if (sudahAda) {
                     console.log("⚠️ Ingatan baru sudah ada di memory.json, tidak disimpan ulang.");
                     break;
                 }
-        
-                currentData.push(newMemory);
+
+                const entryBaru: MemoryEntry = topic && topic.trim() !== ""
+                    ? { text: newMemory, topic: topic.trim() }
+                    : newMemory;
+
+                currentData.push(entryBaru);
                 fs.writeFileSync(memoryFilePath, JSON.stringify(currentData, null, 4));
 
                 const embedding = await extractor(newMemory, { pooling: "mean", normalize: true });
 
                 memoryVectors.push({ text: newMemory, embedding: embedding.data });
 
-                console.log(`💾 Ingatan baru berhasil disimpan ke memory.json: "${newMemory}"`);
+                console.log(
+                    `💾 Ingatan baru berhasil disimpan ke memory.json: "${newMemory}"` +
+                    (topic ? ` (topik: ${topic})` : "")
+                );
                 syncMemoryToObsidian(currentData);
 
                 break;
             }
-        
+
             case "replace": {
                 //replace memory lama
                 //ganti
-                const currentData = JSON.parse(fs.readFileSync(memoryFilePath, 'utf-8'));
-        
-                const index = currentData.indexOf(oldMemory);
-        
+                const currentData: MemoryEntry[] = JSON.parse(fs.readFileSync(memoryFilePath, 'utf-8'));
+
+                const index = currentData.findIndex(m => entryText(m) === oldMemory);
+
                 if (index !== -1) {
-                    currentData[index] = newMemory;
+                    const lama = currentData[index];
+                    // Kalau topik baru gak dikasih, pertahankan topik lama (kalau ada)
+                    // biar ingatan yang direvisi gak "keluar" dari induknya sendiri.
+                    const topikDipakai = topic && topic.trim() !== ""
+                        ? topic.trim()
+                        : (typeof lama === "object" ? lama.topic : "");
+
+                    currentData[index] = topikDipakai ? { text: newMemory, topic: topikDipakai } : newMemory;
                     fs.writeFileSync(memoryFilePath, JSON.stringify(currentData, null, 4));
-        
                 }
-        
+
                 memoryVectors = [];
 
-                const semuaMemory = JSON.parse(fs.readFileSync(memoryFilePath, 'utf-8'));
-                for (const teks of semuaMemory) {
+                const semuaMemory: MemoryEntry[] = JSON.parse(fs.readFileSync(memoryFilePath, 'utf-8'));
+                for (const m of semuaMemory) {
+                    const teks = entryText(m);
                     const emb = await extractor(teks, { pooling: 'mean', normalize: true });
                     memoryVectors.push({ text: teks, embedding: emb.data });
                 }
@@ -158,7 +185,7 @@ export async function updateMemory(
                 syncMemoryToObsidian(semuaMemory);
                 break;
             }
-        
+
             case "none": {
                 break;
             }
@@ -167,7 +194,7 @@ export async function updateMemory(
                 console.log(`action tidak dikenal: ${action}`);
                 break;
         }
-                
+
     } catch (error) {
         console.error("Gagal update memory", error);
     }

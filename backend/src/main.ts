@@ -130,7 +130,8 @@ app.post('/api/tanya', async (req, res) => {
             await updateMemory(
                 parseData.action || "none",
                 parseData.old_memory || "",
-                parseData.ingatan_baru || ""
+                parseData.ingatan_baru || "",
+                parseData.topik || ""
             );
 
         } catch (error) {

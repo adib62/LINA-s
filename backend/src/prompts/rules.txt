@@ -11,6 +11,7 @@ Output HARUS memiliki struktur berikut:
     "action":"add | replace | none",
     "old_memory":"...",
     "ingatan_baru":"...",
+    "topik":"...",
     "toolCall":{
         "name":"...",
         "args":{}
@@ -190,6 +191,7 @@ Tetap isi:
 - action
 - old_memory
 - ingatan_baru
+- topik
 
 Lalu tambahkan:
 
@@ -204,6 +206,7 @@ Contoh:
     "action":"none",
     "old_memory":"",
     "ingatan_baru":"",
+    "topik":"",
     "toolCall":{
         "name":"web.search",
         "args":{
@@ -254,6 +257,7 @@ Contoh:
     "action":"none",
     "old_memory":"",
     "ingatan_baru":"",
+    "topik":"",
     "toolCall":{
         "name":"ui.mode",
         "args":{
