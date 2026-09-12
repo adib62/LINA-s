@@ -19,13 +19,13 @@ export const AVAILABLE_MODELS: ModelInfo[] = [
         id: "openai/gpt-oss-20b",
         label: "GPT-OSS 20B",
         provider: "groq",
-        note: "Default, cepat, patuh format JSON"
+        note: "Cepat, tapi kadang kewalahan sama system prompt yang udah cukup panjang"
     },
     {
         id: "openai/gpt-oss-120b",
         label: "GPT-OSS 120B",
         provider: "groq",
-        note: "Lebih pintar, lebih lambat"
+        note: "Default — lebih pintar & konsisten, lebih lambat dikit"
     },
     {
         id: "qwen/qwen3.8-27b",

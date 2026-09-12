@@ -4,7 +4,10 @@ export const VOICE_SPEED = 1.4;
 
 export const DEFAULT_JAPANESE = "こんにちは";
 
-export const GROQ_MODEL = "openai/gpt-oss-20b";
+// gpt-oss-20b kadang kewalahan sama system prompt LINA yang udah cukup panjang
+// (rules + daftar tool + personality + memory) dan malah echo balik pesan user
+// apa adanya alih-alih jawab natural — ketauan pas tes langsung. 120b konsisten.
+export const GROQ_MODEL = "openai/gpt-oss-120b";
 
 export const GROQ_TEMPERATURE = 0.3;
 

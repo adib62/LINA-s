@@ -1,5 +1,5 @@
 {
-    "model": "openai/gpt-oss-20b",
+    "model": "openai/gpt-oss-120b",
     "effort": "medium",
     "speakerId": 46,
     "autoSpeak": true,
@@ -8,6 +8,6 @@
     "alertMode": true,
     "telegramNotif": false,
     "language": "JA",
-    "mode": "agent",
+    "mode": "chat",
     "initiativeEnabled": true
 }
