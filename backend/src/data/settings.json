@@ -1,0 +1,13 @@
+{
+    "model": "groq/compound",
+    "effort": "medium",
+    "speakerId": 46,
+    "autoSpeak": true,
+    "webcam": true,
+    "faceRecognition": false,
+    "alertMode": true,
+    "telegramNotif": false,
+    "language": "JA",
+    "mode": "agent",
+    "initiativeEnabled": true
+}

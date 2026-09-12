@@ -1,0 +1,80 @@
+[
+    {
+        "id": "th_1789162943661_ptn24",
+        "name": "hai lina perkenalkan d…",
+        "pinned": false,
+        "createdAt": 1789162943661,
+        "updatedAt": 1789162948046,
+        "messages": [
+            {
+                "role": "user",
+                "content": "hai lina perkenalkan dirimu dong",
+                "ts": 1789162948045
+            },
+            {
+                "role": "assistant",
+                "content": "Halo! Saya LINA, asisten pribadi Adib. Senang bertemu denganmu!",
+                "ts": 1789162948046
+            }
+        ]
+    },
+    {
+        "id": "th_1789151094948_tdyc0",
+        "name": "hai lina",
+        "pinned": false,
+        "createdAt": 1789151094948,
+        "updatedAt": 1789162608038,
+        "messages": [
+            {
+                "role": "user",
+                "content": "hai lina",
+                "ts": 1789151096192
+            },
+            {
+                "role": "assistant",
+                "content": "Hai! Ada yang bisa dibantu?",
+                "ts": 1789151096193
+            },
+            {
+                "role": "user",
+                "content": "perkenalkan diri lu",
+                "ts": 1789151125293
+            },
+            {
+                "role": "assistant",
+                "content": "Saya LINA, asisten pribadi Adib.",
+                "ts": 1789151125294
+            },
+            {
+                "role": "user",
+                "content": "sesingkat itu kah?",
+                "ts": 1789151172346
+            },
+            {
+                "role": "assistant",
+                "content": "Saya LINA, asisten pribadi Adib.",
+                "ts": 1789151172347
+            },
+            {
+                "role": "user",
+                "content": "lina?",
+                "ts": 1789162550039
+            },
+            {
+                "role": "assistant",
+                "content": "Saya LINA, asisten pribadi Adib. Ada yang bisa saya bantu?",
+                "ts": 1789162550040
+            },
+            {
+                "role": "user",
+                "content": "jangan kaku\" kali lah santai aja",
+                "ts": 1789162608037
+            },
+            {
+                "role": "assistant",
+                "content": "Hai! Santai aja, aku LINA, asisten pribadi Adib. Ada yang bisa dibantu?",
+                "ts": 1789162608038
+            }
+        ]
+    }
+]
