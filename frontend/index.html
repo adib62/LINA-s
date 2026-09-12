@@ -253,6 +253,13 @@ html, body {
   color: #9a9a9a;
 }
 .a-result-body:not([readonly]) { color: #e5e5e5; }
+.a-result-revise { display: flex; gap: .4rem; padding: .6rem .7rem; border-top: 1px solid #111; flex-shrink: 0; }
+.a-revise-input { flex: 1; min-width: 0; background: #0d0818; border: 1px solid #1e0f30; border-radius: 4px; color: #e5e5e5; font-size: 12px; font-family: inherit; padding: 6px 8px; outline: none; }
+.a-revise-input:focus { border-color: #9333ea; }
+.a-revise-input::placeholder { color: #4a1a6a; }
+.a-revise-btn { background: #0d0818; border: 1px solid #1e0f30; border-radius: 4px; color: #a855f7; width: 30px; cursor: pointer; font-size: 14px; transition: all .2s; }
+.a-revise-btn:hover { color: #c084fc; border-color: #9333ea; }
+.a-revise-btn:disabled { opacity: .5; cursor: default; }
 .a-result-body::-webkit-scrollbar { width: 3px; }
 .a-result-body::-webkit-scrollbar-thumb { background: #1e0f2e; }
 
@@ -510,6 +517,10 @@ html, body {
         <button class="term-close" onclick="closeAgentResult()" title="Tutup">✕</button>
       </div>
       <textarea class="a-result-body" id="agentResultBody" readonly></textarea>
+      <div class="a-result-revise" id="agentReviseRow" style="display:none">
+        <input class="a-revise-input" id="agentReviseInput" type="text" placeholder="Feedback revisi... (misal: kurang formal)" autocomplete="off" />
+        <button class="a-revise-btn" id="agentReviseBtn" onclick="requestRevision()" title="Minta LINA revisi draft ini">↻</button>
+      </div>
     </div>
 
     <div class="a-canvas-wrap" id="agentWrap">
@@ -1449,6 +1460,7 @@ const aCtx = agentCanvas.getContext('2d');
 
 let session = null;
 let selectedIdx = -1;
+let lastRenderedSummary = null;
 let at = 0;
 const spawnTime = new Map();
 const doneFlash = new Map();
@@ -1725,16 +1737,18 @@ function onAgentUpdate(s) {
   const res = document.getElementById('agentResult');
   const body = document.getElementById('agentResultBody');
   const finalizeBtn = document.getElementById('agentFinalizeBtn');
+  const reviseRow = document.getElementById('agentReviseRow');
   const title = document.getElementById('agentResultTitle');
 
   if (s.summary && s.status !== 'running') {
     const isPreview = s.status === 'preview';
 
-    // Jangan timpa teks yang lagi diedit user kalau id sesi sama & masih preview
-    if (body.dataset.sessionId !== s.id || !isPreview) {
+    // Cuma timpa textarea kalau summary-nya beneran ganti (hasil baru/revisi) —
+    // biar gak nimpa teks yang lagi diketik user pas re-render lain kejadian.
+    if (s.summary !== lastRenderedSummary) {
       body.value = s.summary;
+      lastRenderedSummary = s.summary;
     }
-    body.dataset.sessionId = s.id;
 
     if (isPreview) {
       body.removeAttribute('readonly');
@@ -1744,6 +1758,7 @@ function onAgentUpdate(s) {
       title.textContent = s.status === 'failed' ? 'GAGAL' : 'HASIL AKHIR';
     }
     finalizeBtn.style.display = isPreview ? '' : 'none';
+    reviseRow.style.display = isPreview ? '' : 'none';
 
     if (!resultClosed && !res.classList.contains('show')) {
       res.classList.add('show');
@@ -1763,7 +1778,8 @@ async function finalizeAgent() {
   if (!text) { toast('Hasil kosong, gak bisa dikirim.', true); return; }
 
   const btn = document.getElementById('agentFinalizeBtn');
-  btn.disabled = true; btn.textContent = 'MENGIRIM...';
+  const reviseBtn = document.getElementById('agentReviseBtn');
+  btn.disabled = true; reviseBtn.disabled = true; btn.textContent = 'MENGIRIM...';
 
   try {
     await api(`/api/agent/sessions/${session.id}/finalize`, {
@@ -1773,7 +1789,38 @@ async function finalizeAgent() {
     toast('Hasil final terkirim.');
   } catch (e) {
     toast('Gagal finalisasi: ' + e.message, true);
-    btn.disabled = false; btn.textContent = '✓ KIRIM';
+    btn.disabled = false; reviseBtn.disabled = false; btn.textContent = '✓ KIRIM';
+  }
+}
+
+async function requestRevision() {
+  if (!session || session.status !== 'preview') return;
+
+  const feedbackInput = document.getElementById('agentReviseInput');
+  const feedback = feedbackInput.value.trim();
+  if (!feedback) { toast('Isi feedback revisi dulu.', true); return; }
+
+  const text = document.getElementById('agentResultBody').value.trim();
+  if (!text) { toast('Draft kosong, gak bisa direvisi.', true); return; }
+
+  const reviseBtn = document.getElementById('agentReviseBtn');
+  const finalizeBtn = document.getElementById('agentFinalizeBtn');
+  reviseBtn.disabled = true; finalizeBtn.disabled = true;
+  const originalLabel = reviseBtn.textContent;
+  reviseBtn.textContent = '...';
+
+  try {
+    await api(`/api/agent/sessions/${session.id}/revise`, {
+      method: 'POST',
+      body: JSON.stringify({ text, feedback })
+    });
+    feedbackInput.value = '';
+    toast('Draft direvisi.');
+  } catch (e) {
+    toast('Gagal revisi: ' + e.message, true);
+  } finally {
+    reviseBtn.disabled = false; finalizeBtn.disabled = false;
+    reviseBtn.textContent = originalLabel;
   }
 }
 
@@ -1800,11 +1847,14 @@ async function runAgent() {
 
   const resultBody = document.getElementById('agentResultBody');
   resultBody.value = '';
-  resultBody.dataset.sessionId = '';
+  lastRenderedSummary = null;
   const finalizeBtn = document.getElementById('agentFinalizeBtn');
   finalizeBtn.disabled = false;
   finalizeBtn.textContent = '✓ KIRIM';
   finalizeBtn.style.display = 'none';
+  document.getElementById('agentReviseBtn').disabled = false;
+  document.getElementById('agentReviseInput').value = '';
+  document.getElementById('agentReviseRow').style.display = 'none';
 
   const body = { task };
   if (attachment) {
@@ -1828,6 +1878,10 @@ async function stopAgent() {
 
 document.getElementById('agentInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') runAgent();
+});
+
+document.getElementById('agentReviseInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') requestRevision();
 });
 
 /* =====================================================================

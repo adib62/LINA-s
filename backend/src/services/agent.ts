@@ -288,6 +288,50 @@ export async function runAgentTask(
 }
 
 /**
+ * Revisi draft preview berdasarkan feedback pengguna — LLM nulis ulang draftnya.
+ * `currentText` diambil dari textarea di frontend (bukan session.summary), biar
+ * editan manual yang belum disimpan tetep jadi basis revisi. Sesi tetap di status
+ * "preview" setelahnya, jadi bisa direvisi lagi atau langsung difinalisasi.
+ */
+export async function reviseAgentSession(id: string, currentText: string, feedback: string): Promise<AgentSession> {
+    const session = sessions.get(id);
+
+    if (!session) {
+        throw new Error("Sesi tidak ditemukan.");
+    }
+
+    if (session.status !== "preview") {
+        throw new Error(`Sesi berstatus "${session.status}", cuma bisa direvisi dari status "preview".`);
+    }
+
+    const settings = getSettings();
+
+    const revised = await askGroq(
+        [
+            {
+                role: "system",
+                content:
+                    "Kamu adalah LINA. Di bawah ada draft hasil tugas yang sudah ada, dan feedback " +
+                    "revisi dari pengguna. Tulis ulang draftnya supaya sesuai feedback itu. Balas HANYA " +
+                    "teks hasil revisi final dalam Bahasa Indonesia — tanpa embel-embel seperti " +
+                    "'berikut hasil revisinya' atau catatan soal proses revisi."
+            },
+            {
+                role: "user",
+                content: `Draft saat ini:\n${currentText}\n\nFeedback/revisi yang diminta:\n${feedback}`
+            }
+        ],
+        new AbortController().signal,
+        { model: settings.model, effort: settings.effort, jsonMode: false }
+    );
+
+    session.summary = revised.trim();
+    emit(session);
+
+    return session;
+}
+
+/**
  * Finalisasi hasil Agent Mode setelah pengguna meninjau/mengedit preview-nya.
  * Teks yang dikirim dianggap final apa adanya (gak diproses ulang LLM), lalu
  * dipush ke Telegram kalau sudah dikonfigurasi.

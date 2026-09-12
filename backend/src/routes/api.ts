@@ -22,7 +22,7 @@ import { generateVoice } from "../services/voicevox";
 import { ChatMessage } from "../services/history";
 import { DEFAULT_INDONESIAN, DEFAULT_JAPANESE } from "../config/constants";
 import { logError } from "../utils/logger";
-import { runAgentTask, finalizeAgentSession, getSession, listSessions, FileContext } from "../services/agent";
+import { runAgentTask, reviseAgentSession, finalizeAgentSession, getSession, listSessions, FileContext } from "../services/agent";
 import { extractFileText } from "../utils/fileText";
 import { listReminders, createReminder, removeReminder, markDone } from "../services/reminder";
 import { listEvents, createEvent, removeEvent, Rentang } from "../services/calendar";
@@ -443,6 +443,26 @@ router.post("/agent/run", async (req, res) => {
     } catch (error) {
         logError("Agent run gagal!", error);
         return res.status(500).json({ success: false, error: "Agent gagal dijalankan." });
+    }
+});
+
+router.post("/agent/sessions/:id/revise", async (req, res) => {
+    const text = String(req.body?.text ?? "").trim();
+    const feedback = String(req.body?.feedback ?? "").trim();
+
+    if (!text || !feedback) {
+        return res.status(400).json({ success: false, error: "Teks draft atau feedback revisi kosong." });
+    }
+
+    try {
+        const session = await reviseAgentSession(req.params.id, text, feedback);
+        return res.json({ success: true, session });
+    } catch (error) {
+        logError("Revisi agent gagal!", error);
+        return res.status(400).json({
+            success: false,
+            error: error instanceof Error ? error.message : "Gagal merevisi sesi."
+        });
     }
 });
 

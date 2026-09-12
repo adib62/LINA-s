@@ -1,5 +1,5 @@
 {
-    "model": "groq/compound",
+    "model": "openai/gpt-oss-20b",
     "effort": "medium",
     "speakerId": 46,
     "autoSpeak": true,
