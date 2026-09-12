@@ -4,6 +4,7 @@ import { broadcast } from "../websocket/websocket";
 import { ChatMessage } from "./history";
 import { logError } from "../utils/logger";
 import { AVAILABLE_MODELS } from "../config/models";
+import { sendTelegramMessage } from "./telegram";
 
 /**
  * Model buat sub-agent paralel, dipisah dari model chat biasa (`groq/compound`
@@ -28,7 +29,7 @@ export interface FileContext {
     teks: string | null;
 }
 
-export type AgentStatus = "queued" | "running" | "done" | "failed";
+export type AgentStatus = "queued" | "running" | "preview" | "done" | "failed";
 
 export interface SubAgent {
     id: string;
@@ -275,13 +276,38 @@ export async function runAgentTask(
             )
         ).trim();
 
-        session.status = "done";
+        session.status = "preview";
     } catch (error) {
         logError("Gagal menyusun ringkasan agent.", error);
         session.summary = combined;
-        session.status = "done";
+        session.status = "preview";
     }
 
     emit(session);
+    return session;
+}
+
+/**
+ * Finalisasi hasil Agent Mode setelah pengguna meninjau/mengedit preview-nya.
+ * Teks yang dikirim dianggap final apa adanya (gak diproses ulang LLM), lalu
+ * dipush ke Telegram kalau sudah dikonfigurasi.
+ */
+export async function finalizeAgentSession(id: string, finalText: string): Promise<AgentSession> {
+    const session = sessions.get(id);
+
+    if (!session) {
+        throw new Error("Sesi tidak ditemukan.");
+    }
+
+    if (session.status !== "preview") {
+        throw new Error(`Sesi berstatus "${session.status}", cuma bisa difinalisasi dari status "preview".`);
+    }
+
+    session.summary = finalText.trim();
+    session.status = "done";
+    emit(session);
+
+    await sendTelegramMessage(session.summary);
+
     return session;
 }

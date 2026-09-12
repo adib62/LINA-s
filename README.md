@@ -122,6 +122,7 @@ Fitur yang sudah tersedia:
 - ✅ Desktop Observation
 - ✅ MJPEG Live Stream
 - ✅ Frame Capture
+- ✅ Analisis Foto Upload (OCR + deskripsi VLM, dipakai lampiran Agent Mode)
 
 Vision Service dipisahkan dari backend utama agar lebih mudah dikembangkan menggunakan library AI Python.
 
@@ -183,6 +184,10 @@ Mode terpisah dari chat biasa untuk tugas yang lebih kompleks:
 - Sub-agent jalan paralel, masing-masing punya "terminal" sendiri
 - Progress dikirim live lewat WebSocket
 - Hasil akhir digabung otomatis
+- Bisa dikasih lampiran foto — dideskripsikan dulu lewat vision-service (OCR + VLM)
+  sebelum jadi konteks buat sub-agent
+- Hasil gabungan berhenti dulu di status **preview** — bisa diedit manual sebelum final
+- Setelah difinalisasi, hasil otomatis dikirim ke Telegram (kalau sudah dikonfigurasi)
 
 ---
 
@@ -391,6 +396,9 @@ diregistrasi ke `registry` — masih placeholder untuk pengembangan berikutnya.
 - [x] Orchestrator (pecah tugas jadi sub-agent)
 - [x] Sub-agent paralel + live progress
 - [x] Penggabungan hasil akhir
+- [x] Lampiran foto (OCR + deskripsi VLM)
+- [x] Preview hasil sebelum final (bisa diedit)
+- [x] Kirim hasil final ke Telegram
 - [ ] Sub-agent boleh memanggil tool
 - [ ] Riwayat sesi agent tersimpan ke disk
 
@@ -424,6 +432,7 @@ diregistrasi ke `registry` — masih placeholder untuk pengembangan berikutnya.
 | GET | `/api/files/:name` | Download file |
 | POST | `/api/agent/run` \| `/stop` | Agent mode |
 | GET | `/api/agent/sessions[/:id]` | Riwayat sesi agent |
+| POST | `/api/agent/sessions/:id/finalize` | Finalisasi preview Agent Mode → kirim ke Telegram |
 | POST | `/api/scheduler/run-once` | Trigger manual scheduler (debug) |
 
 ---

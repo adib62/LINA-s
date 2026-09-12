@@ -60,6 +60,7 @@
 - [x] OCR
 - [x] Screenshot Analysis
 - [x] Desktop Observation
+- [x] Analisis Foto Upload (OCR + deskripsi VLM, dipakai Agent Mode)
 
 ## Computer Vision
 
@@ -187,6 +188,8 @@
 - [x] Live progress via WebSocket
 - [x] Terminal per sub-agent
 - [x] Penggabungan hasil akhir
+- [x] Preview hasil sebelum final (bisa diedit)
+- [x] Kirim hasil final ke Telegram
 - [ ] Sub-agent boleh memanggil tool
 - [ ] Riwayat sesi agent tersimpan ke disk
 

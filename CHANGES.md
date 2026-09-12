@@ -204,6 +204,41 @@ Obsidian. Dibenerin dengan bungkus 22 blok contoh JSON di `rules.txt`
 
 ---
 
+# Tahap 5 — Foto ke Laporan (Agent Mode) + Preview/Finalize ke Telegram
+
+Tiga potongan yang disambung jadi satu alur: Agent Mode sekarang bisa "melihat" foto yang
+dilampirkan, hasilnya wajib direview dulu sebelum final, dan hasil final bisa didorong ke Telegram.
+
+**Foto sebagai lampiran Agent Mode.** `extractFileText()` (`utils/fileText.ts`) sebelumnya balikin
+`null` buat file gambar — sub-agent gak pernah tau isi fotonya. Sekarang ekstensi gambar
+(`.jpg/.jpeg/.png/.webp/.bmp`) dikirim ke endpoint baru `POST /vision/photo` di vision-service
+(`app/services/photo_service.py`) yang jalanin OCR (EasyOCR) + deskripsi VLM (`describe_image`,
+model `riven/smolvlm` via Ollama) atas file yang di-upload — **bukan** dari `core/frame.py` yang
+dipakai webcam, jadi gak numpang/ganggu state webcam sama sekali. Prompt VLM-nya juga dirombak
+dari "satu kalimat" jadi deskripsi detail (objek, aktivitas, teks/angka yang keliatan), berlaku ke
+semua caller `describe_image` termasuk webcam/`test-vlm`.
+
+**Preview sebelum final.** `AgentStatus` dapet state baru `"preview"` — begitu sub-agent kelar dan
+ringkasan tersusun, sesi berhenti di status ini (bukan langsung `"done"`) dan nunggu pengguna
+review/edit dulu di UI. Endpoint baru `POST /api/agent/sessions/:id/finalize` nerima teks yang
+sudah diedit (dipakai apa adanya, gak diproses ulang LLM sesuai keputusan produk), set status jadi
+`"done"`, baru kirim ke Telegram.
+
+**Kirim ke Telegram.** `services/telegram.ts` — kirim lewat Bot API (`sendMessage`), pesan panjang
+dipecah per ±3500 karakter biar gak kena limit Telegram. Kalau `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`
+kosong di `.env`, fitur ini diam-diam di-skip (cuma log info) — backend tetap jalan normal buat yang
+gak butuh Telegram.
+
+**Frontend.** `agentResultBody` diganti dari `<div>` jadi `<textarea>` — `readonly` pas status
+`done`/`failed`, bisa diedit pas status `preview`. Tombol baru "✓ KIRIM" cuma muncul pas preview,
+manggil endpoint finalize di atas.
+
+**Bug `.gitignore` ketemu sambil jalan:** pola `backend/.env.*` ternyata ikut nge-ignore
+`backend/.env.example` juga — file template itu gak pernah kecommit ke GitHub sejak awal. Ditambah
+baris negasi `!backend/.env.example` biar templatenya ikut kepush, `.env` asli tetap aman diignore.
+
+---
+
 # Bug Ketemu Pas Tes Langsung di Windows
 
 `services/memory.ts` (kode asli, bukan yang gw tulis) langsung `fs.writeFileSync()`

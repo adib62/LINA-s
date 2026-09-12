@@ -17,6 +17,7 @@ from app.services.ocr_formatter import format_ocr_result
 from app.services.webcam_service import analyze_webcam
 from app.core.frame import get_latest_frame
 from app.services.vision_ai import describe_image
+from app.services.photo_service import analyze_photo
 
 router = APIRouter()
 
@@ -169,6 +170,27 @@ def webcam():
         "description": result["description"]
     }
     
+
+@router.post("/vision/photo")
+async def photo(file: UploadFile = File(...)):
+
+    upload_dir = Path("uploads")
+    upload_dir.mkdir(exist_ok=True)
+
+    file_path = upload_dir / file.filename
+
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    result = analyze_photo(str(file_path))
+
+    return {
+        "success": True,
+        "type": "photo",
+        "ocr": result["ocr"],
+        "description": result["description"]
+    }
+
 
 @router.post("/vision/test-vlm")
 def test_vlm():

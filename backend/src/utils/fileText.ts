@@ -1,6 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
 import pdfParse from "pdf-parse";
+import { describePhoto } from "../vision/photo";
+import { logError } from "./logger";
 
 /** Dibatasi kecil karena isinya disuntik ke prompt beberapa sub-agent sekaligus (Agent Mode). */
 const MAX_CHARS = 4000;
@@ -8,6 +10,10 @@ const MAX_CHARS = 4000;
 const TEXT_EXTENSIONS = new Set([
     ".txt", ".md", ".csv", ".json", ".log",
     ".js", ".ts", ".py", ".html", ".css"
+]);
+
+const IMAGE_EXTENSIONS = new Set([
+    ".jpg", ".jpeg", ".png", ".webp", ".bmp"
 ]);
 
 function potong(teks: string): string {
@@ -35,6 +41,16 @@ export async function extractFileText(filePath: string): Promise<string | null> 
 
     if (TEXT_EXTENSIONS.has(ext)) {
         return potong(fs.readFileSync(filePath, "utf-8"));
+    }
+
+    if (IMAGE_EXTENSIONS.has(ext)) {
+        try {
+            const hasil = await describePhoto(filePath);
+            return hasil ? potong(hasil) : null;
+        } catch (error) {
+            logError("Gagal mendeskripsikan foto lewat vision-service.", error);
+            return null;
+        }
     }
 
     return null;

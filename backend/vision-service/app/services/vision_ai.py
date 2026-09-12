@@ -6,7 +6,15 @@ from ollama import Client
 client = Client(host="http://127.0.0.1:11434")
 
 
-def describe_image(frame):
+DETAIL_PROMPT = (
+    "Jelaskan gambar ini secara detail dalam Bahasa Indonesia. Sebutkan: "
+    "objek/alat yang terlihat, aktivitas atau langkah yang sedang dilakukan, "
+    "dan teks/angka yang terlihat di gambar (misal label, hasil pengukuran, tulisan). "
+    "Tulis dalam beberapa kalimat, bukan cuma satu kalimat singkat."
+)
+
+
+def describe_image(frame, prompt: str = DETAIL_PROMPT):
 
     # ==========================
     # Resize gambar agar inferensi lebih cepat
@@ -55,7 +63,7 @@ def describe_image(frame):
         messages=[
             {
                 "role": "user",
-                "content": "Jelaskan gambar ini dalam satu kalimat Bahasa Indonesia.",
+                "content": prompt,
                 "images": [image_path],
             }
         ],
