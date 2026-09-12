@@ -71,6 +71,10 @@ Disimpan pada:
 backend/src/data/memory.json
 ```
 
+Kalau vault Obsidian sudah dipasang (`PROMPTS_DIR`), tiap ingatan baru/berubah
+otomatis ditulis juga ke vault sebagai note yang saling terhubung (`LINA Memory/`
++ `LINA Memory Index.md`) — real-time, tanpa perlu diminta.
+
 ---
 
 ## 💭 Conversation Memory

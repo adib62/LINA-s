@@ -71,6 +71,19 @@ Bagian `---...---` di paling atas otomatis dibuang sebelum dikirim ke LLM,
 jadi gak ikut nyampur ke prompt. Tapi hati-hati kalau nulis blok `---` lain
 di tengah isi (bukan di baris pertama) — cuma blok paling atas yang dibuang.
 
+## Folder `LINA Memory/` — ini beda arah
+
+Semua yang di atas itu Obsidian → LINA (LINA baca prompt dari vault). Folder
+`LINA Memory/` dan file `LINA Memory Index.md` di root vault itu kebalikannya:
+**LINA → Obsidian**. Tiap LINA nyimpen ingatan jangka panjang baru (`memory.json`),
+otomatis ditulis juga ke sana sebagai note yang saling ke-link (index note +
+satu note per ingatan, dirantai sebelumnya/selanjutnya) — real-time, gak perlu
+diminta atau restart backend.
+
+Jangan diedit manual — ketimpa tiap ada ingatan baru/berubah. Kalau mau ubah
+suatu ingatan, ngobrol langsung sama LINA (dia yang update `memory.json`, terus
+otomatis kesinkron ke sini lagi).
+
 ## Kalau mau balik ke bundel bawaan
 
 Hapus atau comment baris `PROMPTS_DIR` di `.env`, restart backend. File asli

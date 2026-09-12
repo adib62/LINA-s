@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { pipeline, cos_sim } from "@xenova/transformers";
+import { syncMemoryToObsidian } from "./obsidianSync";
 
 let extractor: any = null;
 
@@ -49,6 +50,8 @@ export async function initMemory() {
         memoryVectors.push({ text: teks, embedding: output.data });
     }
     console.log(`✅ Memori lokal L.I.N.A berhasil di-index! (${catatanMemori.length} ingatan dimuat)`);
+
+    syncMemoryToObsidian(catatanMemori);
 }
 
 export async function searchMemory(pesan: string):Promise<string> {
@@ -119,13 +122,14 @@ export async function updateMemory(
         
                 currentData.push(newMemory);
                 fs.writeFileSync(memoryFilePath, JSON.stringify(currentData, null, 4));
-        
+
                 const embedding = await extractor(newMemory, { pooling: "mean", normalize: true });
-        
+
                 memoryVectors.push({ text: newMemory, embedding: embedding.data });
-        
+
                 console.log(`💾 Ingatan baru berhasil disimpan ke memory.json: "${newMemory}"`);
-        
+                syncMemoryToObsidian(currentData);
+
                 break;
             }
         
@@ -143,14 +147,15 @@ export async function updateMemory(
                 }
         
                 memoryVectors = [];
-        
+
                 const semuaMemory = JSON.parse(fs.readFileSync(memoryFilePath, 'utf-8'));
                 for (const teks of semuaMemory) {
                     const emb = await extractor(teks, { pooling: 'mean', normalize: true });
                     memoryVectors.push({ text: teks, embedding: emb.data });
                 }
-        
+
                 console.log("💾 Memory Update");
+                syncMemoryToObsidian(semuaMemory);
                 break;
             }
         
