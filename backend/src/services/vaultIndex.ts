@@ -26,7 +26,8 @@ interface VaultNote {
 let notes: VaultNote[] = [];
 let watcher: FSWatcher | null = null;
 
-function isExcluded(relPath: string): boolean {
+/** Diekspor juga biar dipakai skrip lain (misal importVaultNotes.ts) tanpa duplikat logic. */
+export function isExcluded(relPath: string): boolean {
     const parts = relPath.split(path.sep);
     if (parts.length === 1 && EXCLUDED_ROOT_FILES.has(parts[0])) return true;
     if (parts.some(p => EXCLUDED_DIRS.has(p))) return true;
@@ -34,7 +35,7 @@ function isExcluded(relPath: string): boolean {
 }
 
 /** Buang blok frontmatter YAML (---...---) sama kayak buildPrompt.ts. */
-function stripFrontmatter(text: string): string {
+export function stripFrontmatter(text: string): string {
     return text.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "").trim();
 }
 
